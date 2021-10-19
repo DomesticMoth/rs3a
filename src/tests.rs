@@ -169,6 +169,7 @@ mod body_from_text_test{
             color_mod: ColorMod::Full,
             utf8: false,
             datacols: 3,
+            preview: DEFAULT_PREVIEW,
             audio: None
         };
         let body_reference = Body{
@@ -360,9 +361,10 @@ mod header_to_string_tests{
             color_mod: ColorMod::Full,
             utf8: true,
             datacols: 123,
+            preview: 1,
             audio: Some("1234567".to_string())
         };
-        let s_ref = "width 1\nheight 2\ndelay 51\nloop false\ncolors full\nutf8\ndatacols 123\naudio 1234567\n\n".to_string();
+        let s_ref = "width 1\nheight 2\ndelay 51\nloop false\ncolors full\nutf8\ndatacols 123\npreview 1\naudio 1234567\n\n".to_string();
         let s: String = header.into();
         assert_eq!(s_ref, s);
     }
@@ -376,6 +378,7 @@ mod header_to_string_tests{
             color_mod: DEFAULT_COLORS,
             utf8: DEFAULT_UTF8,
             datacols: DEFAULT_COLORS.to_datacols(),
+            preview: DEFAULT_PREVIEW,
             audio: None
         };
         let s_ref = "width 1\nheight 2\n\n".to_string();
@@ -392,6 +395,7 @@ mod header_to_string_tests{
             color_mod: DEFAULT_COLORS,
             utf8: DEFAULT_UTF8,
             datacols: DEFAULT_COLORS.to_datacols()+1,
+            preview: DEFAULT_PREVIEW,
             audio: None
         };
         let s_ref = "width 1\nheight 2\ndatacols 2\n\n".to_string();
@@ -405,7 +409,7 @@ mod header_from_string_tests{
     use std::convert::{TryFrom};
     #[test]
     fn full(){
-        let s = "width 1\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\naudio 12345".to_string();
+        let s = "width 1\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\npreview 1\naudio 12345".to_string();
         let refernce = Header{
             width: 1,
             height: 2,
@@ -414,6 +418,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::Full,
             utf8: true,
             datacols: 5,
+            preview: 1,
             audio: Some("12345".to_string())
         };
         match Header::try_from(s){
@@ -432,6 +437,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::None,
             utf8: false,
             datacols: 1,
+            preview: 0,
             audio: None
         };
         match Header::try_from(s){
@@ -450,6 +456,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::None,
             utf8: false,
             datacols: 1,
+            preview: 0,
             audio: None
         };
         match Header::try_from(s){
@@ -482,6 +489,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::Full,
             utf8: false,
             datacols: 3,
+            preview: 0,
             audio: None
         };
         match Header::try_from(s){
@@ -497,6 +505,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::Full,
             utf8: false,
             datacols: 0,
+            preview: 0,
             audio: None
         };
         match Header::try_from(s){
@@ -516,6 +525,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::Full,
             utf8: true,
             datacols: 5,
+            preview: 0,
             audio: Some("12345".to_string())
         };
         match Header::try_from(s){
@@ -535,6 +545,7 @@ mod header_from_string_tests{
             color_mod: ColorMod::Full,
             utf8: true,
             datacols: 5,
+            preview: 0,
             audio: Some("12345".to_string())
         };
         match Header::try_from(s){

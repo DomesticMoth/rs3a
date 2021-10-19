@@ -22,6 +22,7 @@ use std::{fs, io, fmt};
 mod tests;
 
 const DEFAULT_DELAY: u16 = 50;
+const DEFAULT_PREVIEW: u16 = 0;
 const DEFAULT_LOOP: bool = true;
 const DEFAULT_COLORS: ColorMod = ColorMod::None;
 const DEFAULT_UTF8: bool = false;
@@ -163,6 +164,7 @@ pub struct Header{
     pub color_mod: ColorMod,
     pub utf8: bool,
     pub datacols: u16,
+    pub preview: u16,
     pub audio: Option<String>
 }
 
@@ -413,6 +415,7 @@ impl TryFrom<String> for Header{
         let mut color_mod: ColorMod = DEFAULT_COLORS;
         let mut utf8: bool = DEFAULT_UTF8;
         let mut datacols: u16 = 0; let mut d_set = false;
+        let mut preview: u16 = DEFAULT_PREVIEW;
         let mut audio: Option<String> = None;
         let rows = s.split("\n").collect::<Vec<&str>>();
         for row in rows{
@@ -469,6 +472,13 @@ impl TryFrom<String> for Header{
                     };
                     d_set = true;
                 }
+                "preview" => {
+                    if tokens.len() < 2 {continue;}
+                    preview = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {continue;}
+                    };
+                }
                 "audio" => {
                     if tokens.len() < 2 {continue;}
                     audio = match tokens[1]{
@@ -484,7 +494,7 @@ impl TryFrom<String> for Header{
         if !d_set {
             datacols = color_mod.to_datacols();
         }
-        Ok(Self{width, height, delay, loop_enable, color_mod, utf8, datacols, audio})
+        Ok(Self{width, height, delay, loop_enable, color_mod, utf8, datacols, preview, audio})
     }
 }
 
@@ -517,6 +527,10 @@ impl Into<String> for Header{
         if self.color_mod.to_datacols() != self.datacols{
             ret.push_str("\ndatacols ");
             ret.push_str(&self.datacols.to_string());
+        }
+        if self.preview != DEFAULT_PREVIEW {
+            ret.push_str("\npreview ");
+            ret.push_str(&self.preview.to_string());
         }
         if let Some(a) = self.audio {
             ret.push_str("\naudio ");
