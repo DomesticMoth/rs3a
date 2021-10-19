@@ -132,9 +132,9 @@ pub enum Color{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RowFragment{
-    text: String,
-    fg_color: Option<Color>,
-    bg_color: Option<Color>,
+    pub text: String,
+    pub fg_color: Option<Color>,
+    pub bg_color: Option<Color>,
 }
 
 pub type Row = Vec<RowFragment>;
@@ -143,7 +143,7 @@ pub type Frame = Vec<Row>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body{
-    frames: Vec<Frame>
+    pub frames: Vec<Frame>
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -156,20 +156,20 @@ pub enum ColorMod{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Header{
-    width: u16,
-    height: u16,
-    delay: u16,
-    loop_enable: bool,
-    color_mod: ColorMod,
-    utf8: bool,
-    datacols: u16,
-    audio: Option<String>
+    pub width: u16,
+    pub height: u16,
+    pub delay: u16,
+    pub loop_enable: bool,
+    pub color_mod: ColorMod,
+    pub utf8: bool,
+    pub datacols: u16,
+    pub audio: Option<String>
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Art{
-    header: Header,
-    body: Body,
+    pub header: Header,
+    pub body: Body,
 }
 
 impl Body{
