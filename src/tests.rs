@@ -170,7 +170,9 @@ mod body_from_text_test{
             utf8: false,
             datacols: 3,
             preview: DEFAULT_PREVIEW,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         let body_reference = Body{
             frames: vec![
@@ -362,7 +364,9 @@ mod header_to_string_tests{
             utf8: true,
             datacols: 123,
             preview: 1,
-            audio: Some("1234567".to_string())
+            audio: Some("1234567".to_string()),
+            title: None,
+            author: None,
         };
         let s_ref = "width 1\nheight 2\ndelay 51\nloop false\ncolors full\nutf8\ndatacols 123\npreview 1\naudio 1234567\n\n".to_string();
         let s: String = header.into();
@@ -379,7 +383,9 @@ mod header_to_string_tests{
             utf8: DEFAULT_UTF8,
             datacols: DEFAULT_COLORS.to_datacols(),
             preview: DEFAULT_PREVIEW,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         let s_ref = "width 1\nheight 2\n\n".to_string();
         let s: String = header.into();
@@ -396,7 +402,9 @@ mod header_to_string_tests{
             utf8: DEFAULT_UTF8,
             datacols: DEFAULT_COLORS.to_datacols()+1,
             preview: DEFAULT_PREVIEW,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         let s_ref = "width 1\nheight 2\ndatacols 2\n\n".to_string();
         let s: String = header.into();
@@ -419,7 +427,9 @@ mod header_from_string_tests{
             utf8: true,
             datacols: 5,
             preview: 1,
-            audio: Some("12345".to_string())
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -438,7 +448,9 @@ mod header_from_string_tests{
             utf8: false,
             datacols: 1,
             preview: 0,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -457,7 +469,9 @@ mod header_from_string_tests{
             utf8: false,
             datacols: 1,
             preview: 0,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -490,7 +504,9 @@ mod header_from_string_tests{
             utf8: false,
             datacols: 3,
             preview: 0,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -506,7 +522,9 @@ mod header_from_string_tests{
             utf8: false,
             datacols: 0,
             preview: 0,
-            audio: None
+            audio: None,
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -526,7 +544,9 @@ mod header_from_string_tests{
             utf8: true,
             datacols: 5,
             preview: 0,
-            audio: Some("12345".to_string())
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }
@@ -546,7 +566,9 @@ mod header_from_string_tests{
             utf8: true,
             datacols: 5,
             preview: 0,
-            audio: Some("12345".to_string())
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
         };
         match Header::try_from(s){
             Ok(result) => { assert_eq!(refernce, result); }

@@ -165,7 +165,9 @@ pub struct Header{
     pub utf8: bool,
     pub datacols: u16,
     pub preview: u16,
-    pub audio: Option<String>
+    pub audio: Option<String>,
+    pub title: Option<String>,
+    pub author: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -417,6 +419,8 @@ impl TryFrom<String> for Header{
         let mut datacols: u16 = 0; let mut d_set = false;
         let mut preview: u16 = DEFAULT_PREVIEW;
         let mut audio: Option<String> = None;
+        let mut title: Option<String> = None;
+        let mut author: Option<String> = None;
         let rows = s.split("\n").collect::<Vec<&str>>();
         for row in rows{
             let tokens = row.split(" ").collect::<Vec<&str>>();
@@ -486,6 +490,22 @@ impl TryFrom<String> for Header{
                         a => {Some(a.to_string())}
                     };
                 }
+                "title" => {
+                    if tokens.len() < 2 {continue;}
+                    let mut s = "".to_string();
+                    for i in 1..tokens.len() {
+                        s.push_str(tokens[i])
+                    }
+                    title = Some(s);
+                }
+                "author" => {
+                    if tokens.len() < 2 {continue;}
+                    let mut s = "".to_string();
+                    for i in 1..tokens.len() {
+                        s.push_str(tokens[i])
+                    }
+                    author = Some(s);
+                }
                 _ => {}
             }
         }
@@ -494,7 +514,7 @@ impl TryFrom<String> for Header{
         if !d_set {
             datacols = color_mod.to_datacols();
         }
-        Ok(Self{width, height, delay, loop_enable, color_mod, utf8, datacols, preview, audio})
+        Ok(Self{width, height, delay, loop_enable, color_mod, utf8, datacols, preview, audio, title, author})
     }
 }
 
@@ -534,6 +554,14 @@ impl Into<String> for Header{
         }
         if let Some(a) = self.audio {
             ret.push_str("\naudio ");
+            ret.push_str(&a);
+        }
+        if let Some(a) = self.title {
+            ret.push_str("\ntitle ");
+            ret.push_str(&a);
+        }
+        if let Some(a) = self.author {
+            ret.push_str("\nauthor ");
             ret.push_str(&a);
         }
         ret.push_str("\n\n");
