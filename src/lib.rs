@@ -64,13 +64,16 @@ impl fmt::Display for ReadingError {
 }
 
 pub fn escape_comments(s: &str) -> String{
-    let re = Regex::new(r"\t.*?(\n|$)").unwrap();
-    re.replace_all(&s, "").to_string()
+    let re1 = Regex::new(r"(?m)^\t.*?(\n|$)").unwrap();
+    let re2 = Regex::new(r"\t.*?(\n|$)").unwrap();
+    let s = re1.replace_all(s, "").to_string();
+    let s = re2.replace_all(&s, "\n").to_string();
+    s
 }
 
 pub fn load(s: String) -> Result<Art, ParcingError>{
     let s = escape_comments(&s);
-    let fragments: Vec<&str> = s.split("\n\n").collect();
+    let fragments: Vec<&str> = s.splitn(2, "\n\n").collect();
     if fragments.len() < 2 {
         return Err(ParcingError::ThereIsNoBody);
     }
