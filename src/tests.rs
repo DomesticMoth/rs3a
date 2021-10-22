@@ -12,11 +12,10 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+    along with rs3a.  If not, see <https://www.gnu.org/licenses/>.
 */
 mod tests {
     use crate::*;
-    //const A: &str = "01\t23\n45\t67\n89";
     const A: &str = "	Header starts here
 	Comments starts with tab char
 width 22	Count of symbols in column
@@ -93,7 +92,6 @@ ed`pS6%DK9N% iQo7-[gDO7777777777cc77cccccc770000000000330033333300
 gQ{ikr-5fyM<{ny6=]r4U$77cc77cccccc77cc77cc770033003333330033003300
 iVG.vOv5uWkulYY#GT[&Tm77777777777777777777770000000000000000000000
 U0DC_D-@ml4[7sP7&)C9Q>77777777777777777777770000000000000000000000";
-    //const B: &str = "014589";
     const B: &str = "width 22
 height 14
 loop true

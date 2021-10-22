@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+    along with rs3a.  If not, see <https://www.gnu.org/licenses/>.
 */
 use std::convert::{TryFrom, Into};
 use std::cmp::PartialEq;
