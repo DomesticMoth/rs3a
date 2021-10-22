@@ -90,6 +90,7 @@ pub fn load(s: String) -> Result<Art, ParcingError>{
 
 pub fn save(art: Art, pretify: bool) -> String{
     let mut ret: String = art.header.into();
+    ret += "\n";
     ret += &art.body.to_string(pretify);
     ret
 }
