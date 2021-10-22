@@ -497,6 +497,7 @@ impl TryFrom<String> for Header{
                     if tokens.len() < 2 {continue;}
                     let mut s = "".to_string();
                     for i in 1..tokens.len() {
+                        if i > 1 {s.push_str(" ")}
                         s.push_str(tokens[i])
                     }
                     title = Some(s);
@@ -505,6 +506,7 @@ impl TryFrom<String> for Header{
                     if tokens.len() < 2 {continue;}
                     let mut s = "".to_string();
                     for i in 1..tokens.len() {
+                        if i > 1 {s.push_str(" ")}
                         s.push_str(tokens[i])
                     }
                     author = Some(s);
