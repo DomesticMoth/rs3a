@@ -1,7 +1,7 @@
 # rs3a
 This library provides a structural representation of [3a ascii animations format](https://github.com/DomesticMoth/3a) and methods for reading and writing it.  
 This lib on [crates.io](https://crates.io/crates/rs3a) 
-- Used in
+- [Used in](#used-in)
 - [Usage](#usage)
 - [Short API description](#short-api-description)
   - [Structs](#structs)
