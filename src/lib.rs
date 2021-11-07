@@ -27,23 +27,31 @@ const DEFAULT_LOOP: bool = true;
 const DEFAULT_COLORS: ColorMod = ColorMod::None;
 const DEFAULT_UTF8: bool = false;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Position{
+    row: usize,
+    col: usize
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParcingError{
-    UnknownColor(char),
-    UnknownColorMod(String),
-    InvalidWidth,
-    InvalidHeight,
-    ThereIsNoBody,
+    UnknownColor(char, Position),
+    WidthNotFound,
+    InvalidWidth(String, Position),
+    HeightNotFound,
+    InvalidHeight(String, Position),
+    BodyNotFound
 }
 
 impl fmt::Display for ParcingError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self{
-            Self::UnknownColor(c) => {write!(f, "UnknownColor: {}", c)}
-            Self::UnknownColorMod(s) => {write!(f, "UnknownColorMod: {}", s)}
-            Self::InvalidWidth => {write!(f, "InvalidWidth")}
-            Self::InvalidHeight => {write!(f, "InvalidHeight")}
-            Self::ThereIsNoBody => {write!(f, "There is no body found")}
+            Self::UnknownColor(c, p) => {write!(f, "UnknownColor: '{}' at {:?}", c, p)}
+            Self::WidthNotFound => {write!(f, "WidthNotFound")}
+            Self::HeightNotFound => {write!(f, "HeightNotFound")}
+            Self::InvalidWidth(s, p) => {write!(f, "InvalidWidth: '{}' in {:?}", s, p)}
+            Self::InvalidHeight(s, p) => {write!(f, "InvalidHeight: '{}' in {:?}", s, p)}
+            Self::BodyNotFound => {write!(f, "BodyNotFound")}
         }
     }
 }
@@ -63,6 +71,38 @@ impl fmt::Display for ReadingError {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextRow{
+    nom: usize,
+    row: String
+}
+
+pub type Text = Vec<TextRow>;
+
+
+pub fn string_to_text(s: String) -> Text{
+    let rows: Vec<&str> = s.split("\n").collect();
+    let mut text: Text = Vec::new();
+    let mut nom = 0;
+    for row in rows {
+        text.push(TextRow{nom, row: row.to_string()});
+        nom += 1;
+    }
+    text
+}
+
+pub fn text_to_string(t: Text) -> String{
+    let mut ret = String::new();
+    let ln = t.len();
+    for (i, row) in t.iter().enumerate(){
+        ret += &row.row;
+        if i < ln-1 {
+            ret += "\n";
+        }
+    }
+    ret
+}
+
 pub fn escape_comments(s: &str) -> String{
     let re1 = Regex::new(r"(?m)^\t.*?(\n|$)").unwrap();
     let re2 = Regex::new(r"\t.*?(\n|$)").unwrap();
@@ -71,11 +111,54 @@ pub fn escape_comments(s: &str) -> String{
     s
 }
 
+fn escape_comments_in_row(s: &str) -> String{
+    let re1 = Regex::new(r"(?m)^\t.*?(\n|$)").unwrap();
+    let re2 = Regex::new(r"\t.*?(\n|$)").unwrap();
+    let s = re1.replace_all(s, "").to_string();
+    let s = re2.replace_all(&s, "").to_string();
+    s
+}
+
+pub fn escape_comments_text(text: Text) -> Text{
+    let mut ret: Text = Vec::new();
+    for row in text{
+        if row.row.starts_with('\t') { continue }
+        let len_before = row.row.len();
+        let esc = escape_comments_in_row(&row.row);
+        if esc.len() > 0 {
+            ret.push(TextRow{nom: row.nom, row: esc});
+        }else if len_before < 1{
+            ret.push(TextRow{nom: row.nom, row: esc});
+        }
+    } 
+    ret
+}
+
+pub fn split_text(text: Text) -> (Text, Text){
+    let mut a = Vec::new();
+    let mut b = Vec::new();
+    let mut second = false;
+    for row in text{
+        if row.row.len() < 1 {
+            if !second {
+                second = true;
+                continue
+            }
+            second = true;
+        }
+        match second{
+            false => { a.push(row); }
+            true  => { b.push(row); }
+        }
+    }
+    (a, b)
+}
+
 pub fn load(s: String) -> Result<Art, ParcingError>{
     let s = escape_comments(&s);
     let fragments: Vec<&str> = s.splitn(2, "\n\n").collect();
     if fragments.len() < 2 {
-        return Err(ParcingError::ThereIsNoBody);
+        return Err(ParcingError::BodyNotFound);
     }
     let header: Header = match Header::try_from(fragments[0].to_string()){
         Ok(v) => {v}
@@ -329,14 +412,14 @@ impl ColorMod{
 }
 
 impl TryFrom<&str> for ColorMod{
-    type Error = ParcingError;
+    type Error = ();
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value{
             "none" => {Ok(Self::None)}
             "fg" => {Ok(Self::Fg)}
             "bg" => {Ok(Self::Bg)}
             "full" => {Ok(Self::Full)}
-            _ => {Err(ParcingError::UnknownColorMod(value.to_string()))}
+            _ => {Err(())}
         }
     }
 }
@@ -372,7 +455,7 @@ impl TryFrom<char> for Color{
             'd' => {Ok(Self::BRIGHT_MAGENTA)}
             'e' => {Ok(Self::BRIGHT_YELLOW)}
             'f'=> {Ok(Self::BRIGHT_WHITE)}
-            _ => {Err(ParcingError::UnknownColor(value))}
+            _ => {Err(ParcingError::UnknownColor(value, Position{row: 0, col: 0}))}
         }
     }
 }
@@ -515,8 +598,149 @@ impl TryFrom<String> for Header{
                 _ => {}
             }
         }
-        if !w_set {return Err(ParcingError::InvalidWidth);}
-        if !h_set {return Err(ParcingError::InvalidHeight);}
+        if !w_set {return Err(ParcingError::WidthNotFound);}
+        if !h_set {return Err(ParcingError::HeightNotFound);}
+        if !d_set {
+            datacols = color_mod.to_datacols();
+        }
+        Ok(Self{width, height, delay, loop_enable, color_mod, utf8, datacols, preview, audio, title, author})
+    }
+}
+impl TryFrom<Text> for Header{
+    type Error = ParcingError;
+    fn try_from(t: Text) -> Result<Self, Self::Error> {
+        let mut width: u16 = 0; let mut w_set = false;
+        let mut height: u16 = 0; let mut h_set = false;
+        let mut delay: u16 = DEFAULT_DELAY;
+        let mut loop_enable: bool = DEFAULT_LOOP;
+        let mut color_mod: ColorMod = DEFAULT_COLORS;
+        let mut utf8: bool = DEFAULT_UTF8;
+        let mut datacols: u16 = 0; let mut d_set = false;
+        let mut preview: u16 = DEFAULT_PREVIEW;
+        let mut audio: Option<String> = None;
+        let mut title: Option<String> = None;
+        let mut author: Option<String> = None;
+        let mut invalid_width = false;
+        let mut invalid_width_value = String::new();
+        let mut invalid_width_position = Position{row: 0, col: 0};
+        let mut invalid_height = false;
+        let mut invalid_height_value = String::new();
+        let mut invalid_height_position = Position{row: 0, col: 0};
+        for row in t{
+            let nom = row.nom;
+            let row = row.row;
+            let tokens = row.split(" ").collect::<Vec<&str>>();
+            if tokens.len() < 1 {continue;}
+            let tokens = only_payload(tokens);
+            match tokens[0]{
+                "width" => {
+                    if tokens.len() < 2 {continue;}
+                    width = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {
+                            invalid_width = true;
+                            invalid_width_value = tokens[1].to_string();
+                            invalid_width_position = Position{row: nom, col: 6};
+                            continue;
+                        }
+                    };
+                    w_set = true;
+                }
+                "height" => {
+                    if tokens.len() < 2 {continue;}
+                    height = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {
+                            invalid_height = true;
+                            invalid_height_value = tokens[1].to_string();
+                            invalid_height_position = Position{row: nom, col: 7};
+                            continue;
+                        }
+                    };
+                    h_set = true;
+                }
+                "delay" => {
+                    if tokens.len() < 2 {continue;}
+                    delay = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {continue;}
+                    };
+                }
+                "loop" => {
+                    if tokens.len() < 2 {continue;}
+                    loop_enable = match tokens[1] {
+                        "true" => {true}
+                        "false" => {false}
+                        _ => {continue;}
+                    };
+                }
+                "colors" => {
+                    if tokens.len() < 2 {continue;}
+                    color_mod = match ColorMod::try_from(tokens[1]){
+                        Ok(v) => {v}
+                        _ => {continue;}
+                    };
+                }
+                "utf8" => {
+                    utf8 = true;
+                }
+                "datacols" => {
+                    if tokens.len() < 2 {continue;}
+                    datacols = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {continue;}
+                    };
+                    d_set = true;
+                }
+                "preview" => {
+                    if tokens.len() < 2 {continue;}
+                    preview = match tokens[1].parse::<u16>(){
+                        Ok(v) => {v}
+                        Err(_) => {continue;}
+                    };
+                }
+                "audio" => {
+                    if tokens.len() < 2 {continue;}
+                    audio = match tokens[1]{
+                        "" => {continue;}
+                        a => {Some(a.to_string())}
+                    };
+                }
+                "title" => {
+                    if tokens.len() < 2 {continue;}
+                    let mut s = "".to_string();
+                    for i in 1..tokens.len() {
+                        if i > 1 {s.push_str(" ")}
+                        s.push_str(tokens[i])
+                    }
+                    title = Some(s);
+                }
+                "author" => {
+                    if tokens.len() < 2 {continue;}
+                    let mut s = "".to_string();
+                    for i in 1..tokens.len() {
+                        if i > 1 {s.push_str(" ")}
+                        s.push_str(tokens[i])
+                    }
+                    author = Some(s);
+                }
+                _ => {}
+            }
+        }
+        if !w_set {
+            if invalid_width{
+                return Err(ParcingError::InvalidWidth(invalid_width_value, invalid_width_position))
+            }else{
+                return Err(ParcingError::WidthNotFound);
+            }
+        }
+        if !h_set {
+            if invalid_height{
+                return Err(ParcingError::InvalidHeight(invalid_height_value, invalid_height_position))
+            }else{
+                return Err(ParcingError::HeightNotFound);
+            }
+        }
         if !d_set {
             datacols = color_mod.to_datacols();
         }

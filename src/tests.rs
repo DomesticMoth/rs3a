@@ -155,9 +155,68 @@ U0DC_D-@ml4[7sP7&)C9Q>77777777777777777777770000000000000000000000";
     fn test_escape_comments(){
         assert_eq!(escape_comments(A), B.to_string());
     }
+    #[test]
+    fn test_escape_comments_text(){
+        assert_eq!(
+            text_to_string(
+                escape_comments_text(
+                    string_to_text(A.to_string())
+                )
+            ),
+            B.to_string()
+        );
+    }
+    #[test]
+    fn test_str_text_convertion(){
+        let s = "\nAA\n\n \nBB \t\nC C\n D\n\n".to_string();
+        let text = vec![
+            TextRow{nom: 0, row: "".to_string()},
+            TextRow{nom: 1, row: "AA".to_string()},
+            TextRow{nom: 2, row: "".to_string()},
+            TextRow{nom: 3, row: " ".to_string()},
+            TextRow{nom: 4, row: "BB \t".to_string()},
+            TextRow{nom: 5, row: "C C".to_string()},
+            TextRow{nom: 6, row: " D".to_string()},
+            TextRow{nom: 7, row: "".to_string()},
+            TextRow{nom: 8, row: "".to_string()},
+        ];
+        assert_eq!(text_to_string(string_to_text(s.clone())), s);
+        assert_eq!(string_to_text(s.clone()), text);
+    }
+    #[test]
+    fn text_split_text(){
+        let text = vec![
+            TextRow{nom: 0, row: "a".to_string()},
+            TextRow{nom: 1, row: "b".to_string()},
+            TextRow{nom: 2, row: "".to_string()},
+            TextRow{nom: 3, row: "".to_string()},
+            TextRow{nom: 4, row: "c".to_string()},
+            TextRow{nom: 5, row: "d".to_string()},
+        ];
+        let text_a_ref = vec![
+            TextRow{nom: 0, row: "a".to_string()},
+            TextRow{nom: 1, row: "b".to_string()},
+        ];
+        let text_b_ref = vec![
+            TextRow{nom: 3, row: "".to_string()},
+            TextRow{nom: 4, row: "c".to_string()},
+            TextRow{nom: 5, row: "d".to_string()},
+        ];
+        let (text_a, text_b) = split_text(text);
+        assert_eq!(text_a, text_a_ref);
+        assert_eq!(text_b, text_b_ref);
+    }
+    #[allow(dead_code)]
+    fn text_debug(text: Text) -> String{
+        let mut ret = "\n".to_string();
+        for row in text{
+            ret += &format!("{}. '{}'\n", row.nom, row.row);
+        }
+        ret
+    }
 }
 
-mod body_to_text_test{
+mod body_to_string_test{
     use crate::*;
     #[test]
     fn test_correct_fullcolor(){
@@ -290,7 +349,7 @@ mod body_to_text_test{
     }
 }
 
-mod body_from_text_test{
+mod body_from_string_test{
     use crate::*;
     #[test]
     fn test_correct_fullcolor(){
@@ -710,3 +769,193 @@ mod header_from_string_tests{
     }
 }
 
+
+mod header_from_text_tests{
+    use crate::*;
+    use std::convert::{TryFrom};
+    #[test]
+    fn full(){
+        let s = "width 1\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\npreview 1\naudio 12345".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+            delay: 3,
+            loop_enable: false,
+            color_mod: ColorMod::Full,
+            utf8: true,
+            datacols: 5,
+            preview: 1,
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+    #[test]
+    fn only_required(){
+        let s = "width 1\nheight 2".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+             delay: 50,
+            loop_enable: true,
+            color_mod: ColorMod::None,
+            utf8: false,
+            datacols: 1,
+            preview: 0,
+            audio: None,
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+    #[test]
+    fn optional_incorrect(){
+        let s = "width 1\nheight 2\ndelay safdsfsdf\nloop dsfsdf\ncolors dfdfdf\ndatacols dfsfsddf".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+             delay: 50,
+            loop_enable: true,
+            color_mod: ColorMod::None,
+            utf8: false,
+            datacols: 1,
+            preview: 0,
+            audio: None,
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+    #[test]
+    fn width_incorrect(){
+        let s = "width sdfsfsdf\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\naudio 12345".to_string();
+        let t = string_to_text(s);
+        match Header::try_from(t.clone()){
+            Ok(_) => { assert!(false, "Unexpected Ok") }
+            Err(e) => {
+                if let ParcingError::InvalidWidth(s, p) = e{
+                    assert_eq!(s, "sdfsfsdf");
+                    assert_eq!(p, Position{row: 0, col: 6});
+                }else{
+                    assert!(false, "Invalid error {}", e)
+                }
+            }
+        }
+    }
+    #[test]
+    fn height_incorrect(){
+        let s = "width 1\nheight sdfsdfsdf\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\naudio 12345".to_string();
+        let t = string_to_text(s);
+        match Header::try_from(t.clone()){
+            Ok(_) => { assert!(false, "Unexpected Ok") }
+            Err(e) => {
+                if let ParcingError::InvalidHeight(s, p) = e{
+                    assert_eq!(s, "sdfsdfsdf");
+                    assert_eq!(p, Position{row: 1, col: 7});
+                }else{
+                    assert!(false, "Invalid error {}", e)
+                }
+            }
+        }
+    }
+    #[test]
+    fn datacols(){
+        let s = "width 1\nheight 2\ncolors full".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+             delay: 50,
+            loop_enable: true,
+            color_mod: ColorMod::Full,
+            utf8: false,
+            datacols: 3,
+            preview: 0,
+            audio: None,
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+        let s = "width 1\nheight 2\ncolors full\ndatacols 0".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+             delay: 50,
+            loop_enable: true,
+            color_mod: ColorMod::Full,
+            utf8: false,
+            datacols: 0,
+            preview: 0,
+            audio: None,
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+    #[test]
+    fn extra_spaces(){
+        let s = "width    1\nheight    2\ndelay    3\nloop    false\ncolors    full \
+        \nutf8   \ndatacols    5\naudio    12345".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+            delay: 3,
+            loop_enable: false,
+            color_mod: ColorMod::Full,
+            utf8: true,
+            datacols: 5,
+            preview: 0,
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+    #[test]
+    fn extra_params(){
+        let s = "width 1   sfdfsdf fdsfd sdf \nheight 2 fds dsfsdf\ndelay 3 fd ff \
+        \nloop false   fdfdf  \ncolors full fdfd\nutf8  fdfdf\ndatacols 5 fdfd fd d\naudio 12345 fdfdfdf".to_string();
+        let t = string_to_text(s);
+        let refernce = Header{
+            width: 1,
+            height: 2,
+            delay: 3,
+            loop_enable: false,
+            color_mod: ColorMod::Full,
+            utf8: true,
+            datacols: 5,
+            preview: 0,
+            audio: Some("12345".to_string()),
+            title: None,
+            author: None,
+        };
+        match Header::try_from(t){
+            Ok(result) => { assert_eq!(refernce, result); }
+            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        }
+    }
+}
