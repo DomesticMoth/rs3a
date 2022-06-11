@@ -18,6 +18,7 @@ use std::convert::{TryFrom, Into};
 use std::cmp::PartialEq;
 use regex::Regex;
 use std::{fs, io, fmt};
+use std::sync::Arc;
 #[cfg(test)]
 mod tests;
 
@@ -48,10 +49,10 @@ impl fmt::Display for ParcingError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ReadingError{
     ParcingError(ParcingError),
-    IOError(io::Error),
+    IOError(Arc<io::Error>),
 }
 
 impl fmt::Display for ReadingError {
@@ -98,7 +99,7 @@ pub fn save(art: Art, pretify: bool) -> String{
 pub fn load_file(path: String) -> Result<Art, ReadingError>{
     let s = match fs::read_to_string(path) {
         Ok(s) => {s}
-        Err(ie) => {return Err(ReadingError::IOError(ie))}
+        Err(ie) => {return Err(ReadingError::IOError(Arc::new(ie)))}
     };
     match load(s) {
         Ok(v) => {Ok(v)}
@@ -114,7 +115,7 @@ pub fn save_file(art: Art, path: String, pretify: bool) -> Result<(), io::Error>
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(non_camel_case_types)]
 pub enum Color{
     BLACK,
@@ -135,7 +136,7 @@ pub enum Color{
     BRIGHT_WHITE
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RowFragment{
     pub text: String,
     pub fg_color: Option<Color>,
@@ -146,12 +147,12 @@ pub type Row = Vec<RowFragment>;
 
 pub type Frame = Vec<Row>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Body{
     pub frames: Vec<Frame>
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ColorMod{
     None,
     Fg,
@@ -159,7 +160,7 @@ pub enum ColorMod{
     Full
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Header{
     pub width: u16,
     pub height: u16,
@@ -174,7 +175,7 @@ pub struct Header{
     pub author: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Art{
     pub header: Header,
     pub body: Body,
