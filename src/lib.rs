@@ -431,6 +431,7 @@ impl TryFrom<String> for Header{
             let tokens = row.split(" ").collect::<Vec<&str>>();
             if tokens.len() < 1 {continue;}
             let tokens = only_payload(tokens);
+            if tokens.len() < 1 {continue;}
             match tokens[0]{
                 "width" => {
                     if tokens.len() < 2 {continue;}
