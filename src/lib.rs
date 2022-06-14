@@ -25,7 +25,7 @@ extern crate lazy_static;
 mod tests;
 
 lazy_static! {
-    static ref COLORS: Vec<Color> = vec![
+    pub static ref COLORS: Vec<Color> = vec![
         Color::BLACK,
         Color::BLUE,
         Color::GREEN,
