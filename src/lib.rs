@@ -19,8 +19,31 @@ use std::cmp::PartialEq;
 use regex::Regex;
 use std::{fs, io, fmt};
 use std::sync::Arc;
+#[macro_use]
+extern crate lazy_static;
 #[cfg(test)]
 mod tests;
+
+lazy_static! {
+    static ref COLORS: Vec<Color> = vec![
+        Color::BLACK,
+        Color::BLUE,
+        Color::GREEN,
+        Color::CYAN,
+        Color::RED,
+        Color::MAGENTA,
+        Color::YELLOW,
+        Color::WHITE,
+        Color::GRAY,
+        Color::BRIGHT_BLUE,
+        Color::BRIGHT_GREEN,
+        Color::BRIGHT_CYAN,
+        Color::BRIGHT_RED,
+        Color::BRIGHT_MAGENTA,
+        Color::BRIGHT_YELLOW,
+        Color::BRIGHT_WHITE,
+    ];
+}
 
 const DEFAULT_DELAY: u16 = 50;
 const DEFAULT_PREVIEW: u16 = 0;

@@ -1,6 +1,6 @@
 [package]
 name = "rs3a"
-version = "1.0.3"
+version = "1.0.4"
 edition = "2018"
 authors = ["DomesticMoth"]
 description = "Lib for reading and writing 3a format"
@@ -11,3 +11,4 @@ license = "GPL-3.0"
 
 [dependencies]
 regex = "1"
+lazy_static = "1.4.0"
